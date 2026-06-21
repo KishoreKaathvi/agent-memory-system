@@ -19,7 +19,28 @@ Once started, open your web browser and navigate to:
 
 ---
 
-## 🖥️ 2. Using the Dashboard Interface
+## ⚙️ 2. Provider, Model, and API Key Configuration
+
+The Agent Memory System uses local CPU-based models for hybrid search/reranking and external LLM APIs (OpenRouter, NVIDIA NIM) for contradiction checks, temporal summaries, and answer generation.
+
+### A. Backend LLM Providers & Model Selection
+All external LLM configurations are managed server-side via the `.env` file in the project root:
+- **OpenRouter (Default)**: Set your key in `OPENROUTER_API_KEY` and specify your preferred model in `OPENROUTER_MODEL` (e.g., `meta-llama/llama-3.3-70b-instruct:free`).
+- **NVIDIA NIM (Fallback)**: Add your key to `NVIDIA_API_KEY` to automatically include NVIDIA's endpoints as a fallback provider (using `nvidia/llama-3.1-nemotron-70b-instruct`).
+- **Custom Fallback Chain**: If you want to modify fallback priorities, edit the `FALLBACK_CHAIN` array inside [llm.py](file:///c:/Users/Lalli_KK74/Videos/Judgement%20Frontend%20Project/Software%20developer%20files/KK%20Multi%20Agent%20-%20Multi%20API/llm.py).
+
+*Note: For security and stability, these keys cannot be uploaded via the dashboard UI. They must be set in the `.env` file or passed as environment variables in Docker.*
+
+### B. Client Access & API Authorization Key
+To authenticate agents, tools, or users communicating with the memory backend:
+1. Set the access key on the server in `.env` under `MEMORY_SYSTEM_API_KEY`.
+2. **Dashboard access**: Paste the token into the **🛡️ Authentication** card in the dashboard's left sidebar under **API Authorization Token**.
+3. **REST API access**: Pass the key in the request header: `Authorization: Bearer <key>`.
+4. **MCP Tool access**: Pass the key as the `api_key` argument in `remember` or `recall` tool calls.
+
+---
+
+## 🖥️ 3. Using the Dashboard Interface
 
 Open `http://localhost:8000` in your browser. The dashboard gives you a visual way to manage memories:
 
@@ -30,7 +51,7 @@ Open `http://localhost:8000` in your browser. The dashboard gives you a visual w
 
 ---
 
-## 📡 3. REST API Integrations (curl examples)
+## 📡 4. REST API Integrations (curl examples)
 
 Include these endpoints in your own scripts or agent pipelines. Always pass your API Key in the headers.
 
@@ -72,7 +93,7 @@ curl -X POST http://localhost:8000/answer \
 
 ---
 
-## 🐳 4. Production Deployment with Docker
+## 🐳 5. Production Deployment with Docker
 
 To deploy the system for remote access or servers:
 
@@ -85,7 +106,7 @@ This exposes the REST endpoints on port `8000` with automated database persisten
 
 ---
 
-## 📅 5. Automated Backups & Cleanups
+## 📅 6. Automated Backups & Cleanups
 
 You can automate daily rollups, database backups, and TTL sweeps using the background job runner. Run these commands using a Cron Scheduler or Windows Task Scheduler:
 

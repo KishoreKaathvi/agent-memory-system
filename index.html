@@ -468,6 +468,12 @@
                     <select id="llmProvider" onchange="updateModelDropdown()">
                         <option value="openrouter">OpenRouter (Default)</option>
                         <option value="nvidia">NVIDIA NIM</option>
+                        <option value="google">Google Gemini (AI Studio)</option>
+                        <option value="github">GitHub Models</option>
+                        <option value="mistral">Mistral AI</option>
+                        <option value="cohere">Cohere</option>
+                        <option value="together">Together AI</option>
+                        <option value="sambanova">SambaNova</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -598,6 +604,32 @@
                 { value: "z-ai/glm-5.1", text: "GLM 5.1" },
                 { value: "minimaxai/minimax-m3", text: "MiniMax M3" },
                 { value: "nvidia/llama-3.1-nemotron-70b-instruct", text: "Nemotron 70B Instruct" }
+            ],
+            google: [
+                { value: "gemini-2.5-flash", text: "Gemini 2.5 Flash" },
+                { value: "gemini-2.5-pro", text: "Gemini 2.5 Pro" }
+            ],
+            github: [
+                { value: "gpt-4o-mini", text: "GPT-4o Mini" },
+                { value: "gpt-4o", text: "GPT-4o" },
+                { value: "meta-llama-3.1-405b-instruct", text: "Llama 3.1 405B" }
+            ],
+            mistral: [
+                { value: "mistral-small-latest", text: "Mistral Small" },
+                { value: "mistral-large-latest", text: "Mistral Large" },
+                { value: "codestral-latest", text: "Codestral" }
+            ],
+            cohere: [
+                { value: "command-r", text: "Command R" },
+                { value: "command-r-plus", text: "Command R+" }
+            ],
+            together: [
+                { value: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo", text: "Llama 3.1 405B Turbo" },
+                { value: "Qwen/Qwen2.5-72B-Instruct-Turbo", text: "Qwen 2.5 72B Turbo" }
+            ],
+            sambanova: [
+                { value: "Meta-Llama-3.1-405B-Instruct", text: "Llama 3.1 405B" },
+                { value: "Meta-Llama-3.1-70B-Instruct", text: "Llama 3.1 70B" }
             ]
         };
 

@@ -17,6 +17,12 @@ if not provider_logger.handlers:
 # Config keys and settings
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "")
+SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY", "")
 DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
 
 # Define fallback chain (model name, provider/base_url, API key)
@@ -39,6 +45,19 @@ if NVIDIA_API_KEY:
         ("minimaxai/minimax-m3", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY),
         ("nvidia/llama-3.1-nemotron-70b-instruct", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY)
     ])
+
+if GEMINI_API_KEY:
+    FALLBACK_CHAIN.append(("gemini-2.5-flash", "https://generativelanguage.googleapis.com/v1beta/openai", GEMINI_API_KEY))
+if GITHUB_TOKEN:
+    FALLBACK_CHAIN.append(("gpt-4o-mini", "https://models.github.ai/inference", GITHUB_TOKEN))
+if MISTRAL_API_KEY:
+    FALLBACK_CHAIN.append(("mistral-small-latest", "https://api.mistral.ai/v1", MISTRAL_API_KEY))
+if COHERE_API_KEY:
+    FALLBACK_CHAIN.append(("command-r", "https://api.cohere.ai/compatibility/v1", COHERE_API_KEY))
+if TOGETHER_API_KEY:
+    FALLBACK_CHAIN.append(("Qwen/Qwen2.5-72B-Instruct-Turbo", "https://api.together.xyz/v1", TOGETHER_API_KEY))
+if SAMBANOVA_API_KEY:
+    FALLBACK_CHAIN.append(("Meta-Llama-3.1-70B-Instruct", "https://api.sambanova.ai/v1", SAMBANOVA_API_KEY))
 
 class AllProvidersExhaustedError(Exception):
     """Exception raised when all configured LLM models fail or are rate-limited."""
@@ -66,6 +85,24 @@ async def generate_answer(query: str, context_str: str = "", system_prompt: str 
         if "nvidia" in p_lower:
             base_url = "https://integrate.api.nvidia.com/v1"
             api_key = NVIDIA_API_KEY
+        elif "google" in p_lower or "gemini" in p_lower:
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
+            api_key = GEMINI_API_KEY
+        elif "github" in p_lower:
+            base_url = "https://models.github.ai/inference"
+            api_key = GITHUB_TOKEN
+        elif "mistral" in p_lower:
+            base_url = "https://api.mistral.ai/v1"
+            api_key = MISTRAL_API_KEY
+        elif "cohere" in p_lower:
+            base_url = "https://api.cohere.ai/compatibility/v1"
+            api_key = COHERE_API_KEY
+        elif "together" in p_lower:
+            base_url = "https://api.together.xyz/v1"
+            api_key = TOGETHER_API_KEY
+        elif "sambanova" in p_lower:
+            base_url = "https://api.sambanova.ai/v1"
+            api_key = SAMBANOVA_API_KEY
         else:
             base_url = "https://openrouter.ai/api/v1"
             api_key = OPENROUTER_API_KEY

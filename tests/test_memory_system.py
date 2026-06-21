@@ -284,3 +284,41 @@ async def test_custom_model_selection(mock_generate_answer):
         assert kwargs["model"] == "nvidia/llama-3.1-nemotron-70b-instruct"
 
 
+@pytest.mark.asyncio
+@patch("app.generate_answer", new_callable=AsyncMock)
+async def test_multiprovider_selection(mock_generate_answer):
+    """Verify that passing different provider and model parameters correctly maps downstream."""
+    mock_generate_answer.return_value = "Mocked answer"
+    os.environ["DATABASE_PATH"] = TEST_DB_PATH
+    
+    from fastapi.testclient import TestClient
+    from app import app, MEMORY_SYSTEM_API_KEY
+    
+    providers_to_test = [
+        ("google", "gemini-2.5-flash"),
+        ("github", "gpt-4o-mini"),
+        ("mistral", "mistral-large-latest"),
+        ("cohere", "command-r"),
+        ("together", "Qwen/Qwen2.5-72B-Instruct-Turbo"),
+        ("sambanova", "Meta-Llama-3.1-70B-Instruct")
+    ]
+    
+    with TestClient(app) as client:
+        headers = {"Authorization": f"Bearer {MEMORY_SYSTEM_API_KEY}"}
+        for provider, model in providers_to_test:
+            mock_generate_answer.reset_mock()
+            req_data = {
+                "agent_id": "default-agent",
+                "query": "Synthesize some memory logs",
+                "llm_provider": provider,
+                "llm_model": model
+            }
+            response = client.post("/answer", headers=headers, json=req_data)
+            assert response.status_code == 200
+            
+            mock_generate_answer.assert_called_once()
+            kwargs = mock_generate_answer.call_args[1]
+            assert kwargs["provider"] == provider
+            assert kwargs["model"] == model
+
+

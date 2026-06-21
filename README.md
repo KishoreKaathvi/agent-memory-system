@@ -46,6 +46,15 @@ Create a `.env` file at the root:
 OPENROUTER_API_KEY=your_key_here
 MEMORY_SYSTEM_API_KEY=mcp_localdev0123456789abcdef...
 DATABASE_PATH=memory.db
+
+# Optional Provider Keys:
+NVIDIA_API_KEY=your_key_here
+GEMINI_API_KEY=your_key_here
+GITHUB_TOKEN=your_key_here
+MISTRAL_API_KEY=your_key_here
+COHERE_API_KEY=your_key_here
+TOGETHER_API_KEY=your_key_here
+SAMBANOVA_API_KEY=your_key_here
 ```
 
 ### 3. Run Automated Tests

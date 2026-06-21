@@ -25,13 +25,14 @@ The Agent Memory System uses local CPU-based models for hybrid search/reranking 
 
 ### A. Backend LLM Providers & Model Selection
 All external LLM configurations are managed server-side via the `.env` file in the project root:
-- **OpenRouter (Default)**: Set your key in `OPENROUTER_API_KEY` and specify your preferred model in `OPENROUTER_MODEL` (e.g., `meta-llama/llama-3.3-70b-instruct:free`).
-- **NVIDIA NIM (Fallback)**: Add your key to `NVIDIA_API_KEY` to access frontier models. We support five key Chinese frontier models:
-  - `deepseek-ai/deepseek-v4-flash`
-  - `qwen/qwen3.5-397b-a17b`
-  - `moonshotai/kimi-k2.6`
-  - `z-ai/glm-5.1`
-  - `minimaxai/minimax-m3`
+- **OpenRouter (Default)**: Set key in `OPENROUTER_API_KEY` and specify model in `OPENROUTER_MODEL` (e.g., `meta-llama/llama-3.3-70b-instruct:free`).
+- **NVIDIA NIM (Fallback)**: Set key in `NVIDIA_API_KEY`. Supports frontier models like `deepseek-ai/deepseek-v4-flash`, `qwen/qwen3.5-397b-a17b`, `moonshotai/kimi-k2.6`, `z-ai/glm-5.1`, `minimaxai/minimax-m3`.
+- **Google Gemini (AI Studio)**: Set key in `GEMINI_API_KEY`. Supports `gemini-2.5-flash`, `gemini-2.5-pro`.
+- **GitHub Models**: Set token in `GITHUB_TOKEN`. Supports `gpt-4o-mini`, `gpt-4o`, `meta-llama-3.1-405b-instruct`.
+- **Mistral AI**: Set key in `MISTRAL_API_KEY`. Supports `mistral-small-latest`, `mistral-large-latest`, `codestral-latest`.
+- **Cohere**: Set key in `COHERE_API_KEY`. Supports `command-r`, `command-r-plus`.
+- **Together AI**: Set key in `TOGETHER_API_KEY`. Supports Qwen and Llama Turbo models.
+- **SambaNova**: Set key in `SAMBANOVA_API_KEY`. Supports Llama 3.1 405B and 70B models.
 - **Custom Fallback Chain**: If you want to modify fallback priorities, edit the `FALLBACK_CHAIN` array inside [llm.py](file:///c:/Users/Lalli_KK74/Videos/Judgement%20Frontend%20Project/Software%20developer%20files/KK%20Multi%20Agent%20-%20Multi%20API/llm.py).
 
 *Note: For security and stability, these keys cannot be uploaded via the dashboard UI. They must be set in the `.env` file or passed as environment variables in Docker.*

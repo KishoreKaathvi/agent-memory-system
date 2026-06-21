@@ -31,9 +31,14 @@ FALLBACK_CHAIN = [
 
 if NVIDIA_API_KEY:
     # If NVIDIA NIM key is supplied, insert it as another fallback options
-    FALLBACK_CHAIN.append(
+    FALLBACK_CHAIN.extend([
+        ("deepseek-ai/deepseek-v4-flash", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY),
+        ("qwen/qwen3.5-397b-a17b", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY),
+        ("moonshotai/kimi-k2.6", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY),
+        ("z-ai/glm-5.1", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY),
+        ("minimaxai/minimax-m3", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY),
         ("nvidia/llama-3.1-nemotron-70b-instruct", "https://integrate.api.nvidia.com/v1", NVIDIA_API_KEY)
-    )
+    ])
 
 class AllProvidersExhaustedError(Exception):
     """Exception raised when all configured LLM models fail or are rate-limited."""

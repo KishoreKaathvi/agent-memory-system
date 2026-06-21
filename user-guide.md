@@ -26,7 +26,12 @@ The Agent Memory System uses local CPU-based models for hybrid search/reranking 
 ### A. Backend LLM Providers & Model Selection
 All external LLM configurations are managed server-side via the `.env` file in the project root:
 - **OpenRouter (Default)**: Set your key in `OPENROUTER_API_KEY` and specify your preferred model in `OPENROUTER_MODEL` (e.g., `meta-llama/llama-3.3-70b-instruct:free`).
-- **NVIDIA NIM (Fallback)**: Add your key to `NVIDIA_API_KEY` to automatically include NVIDIA's endpoints as a fallback provider (using `nvidia/llama-3.1-nemotron-70b-instruct`).
+- **NVIDIA NIM (Fallback)**: Add your key to `NVIDIA_API_KEY` to access frontier models. We support five key Chinese frontier models:
+  - `deepseek-ai/deepseek-v4-flash`
+  - `qwen/qwen3.5-397b-a17b`
+  - `moonshotai/kimi-k2.6`
+  - `z-ai/glm-5.1`
+  - `minimaxai/minimax-m3`
 - **Custom Fallback Chain**: If you want to modify fallback priorities, edit the `FALLBACK_CHAIN` array inside [llm.py](file:///c:/Users/Lalli_KK74/Videos/Judgement%20Frontend%20Project/Software%20developer%20files/KK%20Multi%20Agent%20-%20Multi%20API/llm.py).
 
 *Note: For security and stability, these keys cannot be uploaded via the dashboard UI. They must be set in the `.env` file or passed as environment variables in Docker.*

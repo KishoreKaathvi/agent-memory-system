@@ -1,0 +1,27 @@
+[project]
+name = "agent-memory-system"
+version = "0.1.0"
+description = "Self-Hosted Agent Memory System with Hybrid Retrieval and Temporal Rollup"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "pydantic>=2.0",
+    "sentence-transformers>=2.2.2",
+    "numpy>=1.20.0",
+    "httpx>=0.24.0",
+    "mcp>=0.1.0",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+

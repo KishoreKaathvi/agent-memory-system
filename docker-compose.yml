@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  memory-api:
+    build: .
+    container_name: agent-memory-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - memory-data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/memory.db
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - MEMORY_SYSTEM_API_KEY=${MEMORY_SYSTEM_API_KEY}
+      - OPENROUTER_MODEL=meta-llama/llama-3.3-70b-instruct:free
+    restart: unless-stopped
+
+volumes:
+  memory-data:

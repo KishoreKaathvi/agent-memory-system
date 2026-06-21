@@ -1,0 +1,11 @@
+.env
+.env.local
+.venv/
+__pycache__/
+*.db
+*.db-journal
+*.db-wal
+.pytest_cache/
+backups/
+.dev.vars
+node_modules/

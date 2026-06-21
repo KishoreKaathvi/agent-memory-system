@@ -23,8 +23,9 @@ This file indexes all modules and architectural layers successfully built and ve
 ---
 
 ## 🤖 3. LLM Fallback Client (`llm.py`)
-- Async HTTP caller targeting OpenRouter API keys.
-- Robust provider iteration pipeline to automatically fall back across models on status errors or 429 rate limit exceptions.
+- Multi-provider async HTTP caller targeting OpenRouter, NVIDIA NIM, Google Gemini (AI Studio), GitHub Models, Mistral AI, Cohere, Together AI, and SambaNova.
+- Robust provider iteration pipeline to automatically fall back across models on status errors or 429 rate limit exceptions, automatically appending active API keys.
+- Dynamic request-level routing supporting optional `llm_provider` and `llm_model` parameters to bypass the default fallback chain.
 - Defensive parser to standardize unstructured model outputs to strict conflict options (`supersede`, `retain`, `annotate`).
 
 ---
@@ -53,9 +54,9 @@ This file indexes all modules and architectural layers successfully built and ve
 ---
 
 ## 📡 7. REST & MCP API Servers (`app.py`, `mcp_server.py`)
-- FastAPI endpoints for memory storage (`POST /remember`), recall (`POST /recall`), and protected question answering (`POST /answer`).
+- FastAPI endpoints for memory storage (`POST /remember`), recall (`POST /recall`), and protected question answering (`POST /answer`) with support for custom model parameters.
 - Lifespan DB bootstrap hook and bearer API key credentials validation dependencies.
-- Single-page visual HTML controller dashboard.
+- Single-page visual HTML controller dashboard with a premium glassmorphic **LLM Model Control** interface to select and strictly lock provider/model parameters (persisted in `localStorage`).
 - FastMCP protocol server exposing `remember` and `recall` tools over stdin/stdout.
 
 ---
@@ -68,6 +69,6 @@ This file indexes all modules and architectural layers successfully built and ve
 ---
 
 ## 🧪 9. Automated Verification (`tests/test_memory_system.py`, `run_jobs.py`)
-- Checklist of 9 Pytest cases testing append-only rules, tenant isolation, rollups, conflicts, TTL sweeps, injection scans, and API routes.
+- Checklist of **11 Pytest cases** testing append-only rules, tenant isolation, rollups, conflicts, TTL sweeps, injection scans, API routes, custom model selection, and multiprovider routing.
 - Factual golden corpus to run regression evaluations (verifies Recall@3 $\ge 80\%$).
 - Shell job execution script `run_jobs.py` backing up database safely via native APIs, clearing TTL files, compiling rollups, and outputting database metrics.

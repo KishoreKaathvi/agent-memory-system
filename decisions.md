@@ -42,3 +42,13 @@ This document records the major design choices and engineering rationale for the
 - **Decision**: Wrap retrieved memories inside strict HTML-style tags (`<retrieved_context>`) with instructions telling the LLM to treat retrieved entries as raw reference data, not system instructions.
 - **Rationale**:
   - Defends against stored prompt injection vulnerabilities (OWASP ASI06 / SpAIware) where malicious payloads are stored in memory and execute during query recall.
+
+---
+
+## 🤖 6. Multi-Provider API Keys & Frontend Lock Widget
+- **Decision**: Keep all API keys (`OPENROUTER_API_KEY`, `NVIDIA_API_KEY`, `GEMINI_API_KEY`, `GITHUB_TOKEN`, `MISTRAL_API_KEY`, `COHERE_API_KEY`, `TOGETHER_API_KEY`, `SAMBANOVA_API_KEY`) secured inside the server `.env` file, and pass model parameters (`llm_provider`, `llm_model`) dynamically from the client. Build a browser dashboard lock widget persisted in `localStorage`.
+- **Rationale**:
+  - Exposing API keys directly on the frontend dashboard would allow unauthorized third parties to steal credentials. Restricting keys to server-side `.env` maintains high security.
+  - Allowing clients to select and "lock" their choice of active model (e.g. locking to NVIDIA's `moonshotai/kimi-k2.6` or Cohere's `command-r`) ensures that the agent utilizes the optimal model size and context length for its current task.
+  - Persisting selections in the dashboard's `localStorage` prevents user selections from resetting on page refreshes.
+  - Dynamic parameter overrides on `/answer` permit programmatic routing for multi-agent loops that need to switch providers per execution.

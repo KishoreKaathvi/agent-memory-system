@@ -255,3 +255,32 @@ def test_api_endpoints():
         assert results[0]["content"] == "Test REST API routing endpoints."
 
 
+@pytest.mark.asyncio
+@patch("app.generate_answer", new_callable=AsyncMock)
+async def test_custom_model_selection(mock_generate_answer):
+    """Verify that passing llm_provider and llm_model values propagates correctly to the generate_answer function."""
+    mock_generate_answer.return_value = "Mocked answer using custom model choice"
+    os.environ["DATABASE_PATH"] = TEST_DB_PATH
+    
+    from fastapi.testclient import TestClient
+    from app import app, MEMORY_SYSTEM_API_KEY
+    
+    with TestClient(app) as client:
+        headers = {"Authorization": f"Bearer {MEMORY_SYSTEM_API_KEY}"}
+        req_data = {
+            "agent_id": "default-agent",
+            "query": "Synthesize some memory logs",
+            "llm_provider": "nvidia",
+            "llm_model": "nvidia/llama-3.1-nemotron-70b-instruct"
+        }
+        response = client.post("/answer", headers=headers, json=req_data)
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+        
+        # Verify that mock_generate_answer was called with the selected provider and model
+        mock_generate_answer.assert_called_once()
+        kwargs = mock_generate_answer.call_args[1]
+        assert kwargs["provider"] == "nvidia"
+        assert kwargs["model"] == "nvidia/llama-3.1-nemotron-70b-instruct"
+
+

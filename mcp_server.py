@@ -15,7 +15,7 @@ logger = logging.getLogger("memory.mcp_server")
 mcp = FastMCP("agent-memory")
 
 @mcp.tool()
-async def remember(agent_id: str, memory_class: str, memory_type: str, content: str, api_key: str, source: str = "mcp_client") -> str:
+async def remember(agent_id: str, memory_class: str, memory_type: str, content: str, api_key: str, source: str = "mcp_client", llm_provider: str = None, llm_model: str = None) -> str:
     """
     Store a new episodic or library memory event. Runs semantic conflict detection
     and tenant namespace verification.
@@ -27,6 +27,8 @@ async def remember(agent_id: str, memory_class: str, memory_type: str, content: 
     - content: The actual fact, decision or description text to remember.
     - api_key: Authorization token for the agent's namespace.
     - source: Provenance source (default: 'mcp_client').
+    - llm_provider: Optional LLM provider override.
+    - llm_model: Optional LLM model override.
     """
     if memory_class not in ("episodic", "library"):
         return f"Error: memory_class must be either 'episodic' or 'library'. Received: '{memory_class}'"
@@ -51,7 +53,9 @@ async def remember(agent_id: str, memory_class: str, memory_type: str, content: 
             memory_type=memory_type,
             content=content,
             source=source,
-            explicit=True
+            explicit=True,
+            llm_provider=llm_provider,
+            llm_model=llm_model
         )
         
         return f"Success: Memory recorded with ID {new_id} in agent '{agent_id}' namespace."

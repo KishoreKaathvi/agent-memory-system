@@ -46,7 +46,7 @@ def detect_conflict(conn: sqlite3.Connection, new_content: str, agent_id: str,
 
 async def remember_with_conflict_check(conn: sqlite3.Connection, agent_id: str, memory_class: str, 
                                        memory_type: str, content: str, source: str = None, 
-                                       explicit: bool = True) -> int:
+                                       explicit: bool = True, llm_provider: str = None, llm_model: str = None) -> int:
     """
     Store memory after performing semantic conflict checks. Resolves conflicts
     automatically (supersede/retain/annotate) via LLM validation.
@@ -80,7 +80,7 @@ NEW Statement: "{content}"
 """
 
     try:
-        judgment = await generate_answer(query=prompt)
+        judgment = await generate_answer(query=prompt, provider=llm_provider, model=llm_model)
         decision = parse_conflict_decision(judgment)
     except Exception as e:
         conflict_logger.warning(f"LLM call failed during conflict check: {e}. Defaulting to annotate.")

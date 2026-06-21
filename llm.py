@@ -39,10 +39,10 @@ class AllProvidersExhaustedError(Exception):
     """Exception raised when all configured LLM models fail or are rate-limited."""
     pass
 
-async def generate_answer(query: str, context_str: str = "", system_prompt: str = "") -> str:
+async def generate_answer(query: str, context_str: str = "", system_prompt: str = "", provider: str = None, model: str = None) -> str:
     """
     Call the LLM fallback chain to generate an answer for the given prompt.
-    Tries each configured model in sequence.
+    Tries each configured model in sequence, unless a specific provider and model are locked.
     """
     messages = []
     if system_prompt:
@@ -55,10 +55,23 @@ async def generate_answer(query: str, context_str: str = "", system_prompt: str 
     
     messages.append({"role": "user", "content": user_content})
     
-    # Run through fallback chain
-    for model, base_url, api_key in FALLBACK_CHAIN:
+    # Determine active chain
+    if provider and model:
+        p_lower = provider.lower()
+        if "nvidia" in p_lower:
+            base_url = "https://integrate.api.nvidia.com/v1"
+            api_key = NVIDIA_API_KEY
+        else:
+            base_url = "https://openrouter.ai/api/v1"
+            api_key = OPENROUTER_API_KEY
+        active_chain = [(model, base_url, api_key)]
+    else:
+        active_chain = FALLBACK_CHAIN
+    
+    # Run through active chain
+    for target_model, base_url, api_key in active_chain:
         if not api_key:
-            provider_logger.warning(f"Skipping model {model} due to missing API key.")
+            provider_logger.warning(f"Skipping model {target_model} due to missing API key.")
             continue
             
         url = f"{base_url.rstrip('/')}/chat/completions"
@@ -73,7 +86,7 @@ async def generate_answer(query: str, context_str: str = "", system_prompt: str 
             headers["X-Title"] = "Antigravity Memory Layer"
             
         data = {
-            "model": model,
+            "model": target_model,
             "messages": messages,
             "temperature": 0.1 # Low temperature for factual rollup/evaluation stability
         }
@@ -83,21 +96,21 @@ async def generate_answer(query: str, context_str: str = "", system_prompt: str 
                 response = await client.post(url, headers=headers, json=data)
                 
                 if response.status_code == 429:
-                    provider_logger.warning(f"Rate limited by {model} (429 status code). Falling back...")
+                    provider_logger.warning(f"Rate limited by {target_model} (429 status code). Falling back...")
                     continue
                     
                 response.raise_for_status()
                 res_data = response.json()
                 answer = res_data["choices"][0]["message"]["content"]
                 
-                provider_logger.info(f"Success calling LLM provider: model={model}")
+                provider_logger.info(f"Success calling LLM provider: model={target_model}")
                 return answer.strip()
                 
         except httpx.HTTPStatusError as e:
-            provider_logger.warning(f"HTTP error calling {model}: {e.response.status_code} - {e.response.text}. Falling back...")
+            provider_logger.warning(f"HTTP error calling {target_model}: {e.response.status_code} - {e.response.text}. Falling back...")
             continue
         except Exception as e:
-            provider_logger.warning(f"Error calling {model}: {str(e)}. Falling back...")
+            provider_logger.warning(f"Error calling {target_model}: {str(e)}. Falling back...")
             continue
             
     # If we get here, all providers were exhausted

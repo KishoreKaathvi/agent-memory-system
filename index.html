@@ -414,6 +414,26 @@
             font-size: 0.75rem;
             color: var(--text-muted);
         }
+
+        .btn-locked {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border-color: #059669 !important;
+            color: white !important;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+            animation: pulse-lock 2s infinite;
+        }
+        
+        select:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            background: rgba(27, 37, 63, 0.4);
+        }
+
+        @keyframes pulse-lock {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
     </style>
 </head>
 <body>
@@ -439,6 +459,26 @@
                     <label for="apiKey">API Authorization Token</label>
                     <input type="password" id="apiKey" value="mcp_localdev0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef">
                 </div>
+            </div>
+
+            <div class="card" id="llmConfigCard">
+                <div class="card-title">⚙️ LLM Model Control</div>
+                <div class="form-group">
+                    <label for="llmProvider">LLM Provider</label>
+                    <select id="llmProvider" onchange="updateModelDropdown()">
+                        <option value="openrouter">OpenRouter (Default)</option>
+                        <option value="nvidia">NVIDIA NIM</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="llmModel">LLM Model</label>
+                    <select id="llmModel">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <button class="btn btn-secondary" id="btnLockModel" onclick="toggleModelLock()">
+                    🔓 Auto-Fallback Active
+                </button>
             </div>
 
             <div class="card">
@@ -544,9 +584,88 @@
     </main>
 
     <script>
+        // Model selection and lock logic
+        const modelsByProvider = {
+            openrouter: [
+                { value: "meta-llama/llama-3.3-70b-instruct:free", text: "Llama 3.3 70B (Free)" },
+                { value: "google/gemini-2.5-flash", text: "Gemini 2.5 Flash" },
+                { value: "meta-llama/llama-3-8b-instruct:free", text: "Llama 3 8B (Free)" }
+            ],
+            nvidia: [
+                { value: "nvidia/llama-3.1-nemotron-70b-instruct", text: "Nemotron 70B Instruct" }
+            ]
+        };
+
+        let modelLocked = false;
+
+        function updateModelDropdown() {
+            const provider = document.getElementById("llmProvider").value;
+            const modelSelect = document.getElementById("llmModel");
+            modelSelect.innerHTML = "";
+            
+            const models = modelsByProvider[provider] || [];
+            models.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.value;
+                opt.textContent = m.text;
+                modelSelect.appendChild(opt);
+            });
+        }
+
+        function toggleModelLock() {
+            modelLocked = !modelLocked;
+            const btn = document.getElementById("btnLockModel");
+            const providerSelect = document.getElementById("llmProvider");
+            const modelSelect = document.getElementById("llmModel");
+            
+            if (modelLocked) {
+                btn.innerHTML = "🔒 Locked (Strict Mode)";
+                btn.classList.remove("btn-secondary");
+                btn.classList.add("btn-locked");
+                providerSelect.disabled = true;
+                modelSelect.disabled = true;
+                
+                // Save to localStorage
+                localStorage.setItem("llm_lock_state", "locked");
+                localStorage.setItem("llm_provider", providerSelect.value);
+                localStorage.setItem("llm_model", modelSelect.value);
+            } else {
+                btn.innerHTML = "🔓 Auto-Fallback Active";
+                btn.classList.remove("btn-locked");
+                btn.classList.add("btn-secondary");
+                providerSelect.disabled = false;
+                modelSelect.disabled = false;
+                
+                // Save to localStorage
+                localStorage.setItem("llm_lock_state", "unlocked");
+            }
+        }
+
+        function initLlmConfig() {
+            updateModelDropdown();
+            
+            // Restore from localStorage
+            const savedState = localStorage.getItem("llm_lock_state");
+            const savedProvider = localStorage.getItem("llm_provider");
+            const savedModel = localStorage.getItem("llm_model");
+            
+            if (savedProvider) {
+                document.getElementById("llmProvider").value = savedProvider;
+                updateModelDropdown();
+            }
+            if (savedModel) {
+                document.getElementById("llmModel").value = savedModel;
+            }
+            
+            if (savedState === "locked") {
+                toggleModelLock(); // This will lock it
+            }
+        }
+
         // Init load
         document.addEventListener("DOMContentLoaded", () => {
             loadMetrics();
+            initLlmConfig();
         });
 
         function switchTab(tabId, btn) {
@@ -612,16 +731,22 @@
             term.innerHTML = "Sending write request...";
 
             try {
+                const bodyData = {
+                    agent_id: agentId,
+                    memory_class: memoryClass,
+                    memory_type: memoryType,
+                    content: content,
+                    source: source
+                };
+                if (modelLocked) {
+                    bodyData.llm_provider = document.getElementById("llmProvider").value;
+                    bodyData.llm_model = document.getElementById("llmModel").value;
+                }
+
                 const response = await fetch("/remember", {
                     method: "POST",
                     headers: getHeaders(),
-                    body: JSON.stringify({
-                        agent_id: agentId,
-                        memory_class: memoryClass,
-                        memory_type: memoryType,
-                        content: content,
-                        source: source
-                    })
+                    body: JSON.stringify(bodyData)
                 });
 
                 if (response.ok) {
@@ -712,13 +837,19 @@
             document.getElementById("responseSources").innerHTML = "";
 
             try {
+                const bodyData = {
+                    agent_id: agentId,
+                    query: query
+                };
+                if (modelLocked) {
+                    bodyData.llm_provider = document.getElementById("llmProvider").value;
+                    bodyData.llm_model = document.getElementById("llmModel").value;
+                }
+
                 const response = await fetch("/answer", {
                     method: "POST",
                     headers: getHeaders(),
-                    body: JSON.stringify({
-                        agent_id: agentId,
-                        query: query
-                    })
+                    body: JSON.stringify(bodyData)
                 });
 
                 if (response.ok) {

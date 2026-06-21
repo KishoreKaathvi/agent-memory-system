@@ -76,6 +76,8 @@ class RememberRequest(BaseModel):
     memory_type: str = Field(..., description="Type of memory (e.g. 'fact', 'decision')")
     content: str = Field(..., description="Content to remember")
     source: str = Field("rest_api", description="Where the memory originated")
+    llm_provider: str | None = Field(None, description="Optional target LLM provider")
+    llm_model: str | None = Field(None, description="Optional target LLM model")
 
 class RecallRequest(BaseModel):
     agent_id: str = Field(..., description="The namespace identifier")
@@ -85,6 +87,8 @@ class RecallRequest(BaseModel):
 class AnswerRequest(BaseModel):
     agent_id: str = Field(..., description="The namespace identifier")
     query: str = Field(..., description="User query to synthesize answer for")
+    llm_provider: str | None = Field(None, description="Optional target LLM provider")
+    llm_model: str | None = Field(None, description="Optional target LLM model")
 
 # Endpoints
 @app.post("/remember")
@@ -109,7 +113,9 @@ async def api_remember(request: RememberRequest, auth=Depends(security_scheme)):
             memory_type=request.memory_type,
             content=request.content,
             source=request.source,
-            explicit=True
+            explicit=True,
+            llm_provider=request.llm_provider,
+            llm_model=request.llm_model
         )
         return {"status": "success", "memory_id": new_id}
     except Exception as e:
@@ -163,7 +169,11 @@ async def api_answer(request: AnswerRequest, auth=Depends(security_scheme)):
         prompt = build_answer_prompt(request.query, results)
         
         # Step C: Synthesize answer via fallback LLM client
-        answer = await generate_answer(query=prompt)
+        answer = await generate_answer(
+            query=prompt,
+            provider=request.llm_provider,
+            model=request.llm_model
+        )
         
         cleaned_sources = [
             {

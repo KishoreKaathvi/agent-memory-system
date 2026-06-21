@@ -21,6 +21,9 @@ Once started, open your web browser and navigate to:
 
 ## ⚙️ 2. Provider, Model, and API Key Configuration
 
+> [!NOTE]
+> For the easiest setup, use **[freeLLM.net](https://freellm.net/)**—the best single-point index for finding all free LLM models, getting free API keys, looking up OpenAI-compatible configuration settings, and comparing daily rate limits.
+
 The Agent Memory System uses local CPU-based models for hybrid search/reranking and external LLM APIs (OpenRouter, NVIDIA NIM) for contradiction checks, temporal summaries, and answer generation.
 
 ### A. Backend LLM Providers & Model Selection

@@ -23,10 +23,11 @@ This document records the major design choices and engineering rationale for the
 
 ---
 
-## 🤖 3. OpenRouter Fallback Chain
-- **Decision**: Structure an async provider client that iterates through a list of free-tier model endpoints (e.g. Llama 3.3 70B, Gemini 2.5 Flash, Llama 3 8B).
+## 🤖 3. OpenRouter Fallback Chain & Free API Selection
+- **Decision**: Structure an async provider client that iterates through a list of free-tier model endpoints (e.g. Llama 3.3 70B, Gemini 2.5 Flash, Llama 3 8B). Reference **[freeLLM.net](https://freellm.net/)** as the single point of truth to find newly released free models, OpenAI configurations, and rate limits.
 - **Rationale**:
   - Free-tier API keys can hit rate limits (HTTP 429) or timeouts. A fallback chain prevents API failures from blocking core rollup and conflict resolution operations.
+  - Relying on `freeLLM.net` provides a single, updated registry for all free LLM endpoints, making it easy to map out optimal fallback chains.
 
 ---
 

@@ -6,8 +6,8 @@
 - **Main Achievements**:
   - Coded core storage schema in SQLite with WAL mode, Normal synchronous settings, and transaction serialization.
   - Coded retrieval pipeline (all-MiniLM-L6-v2 embeddings, custom BM25 key ranker, Reciprocal Rank Fusion, BGE reranker).
-  - Integrated 8 free/tier-fallback LLM providers (OpenRouter, NVIDIA NIM, Google Gemini AI Studio, GitHub Models, Mistral AI, Cohere, Together AI, and SambaNova) with OpenAI-compatible dynamic endpoint routing.
-  - Parsed and extracted LLM integration details from scanned PDF files ("Free Access To Every Major AI - full list.pdf" and "Nvidia FREE API - AI Models Guide.pdf") using a custom Python PyMuPDF and OpenRouter-hosted visual OCR sub-pipeline.
+  - Integrated 8 free/tier-fallback LLM providers (OpenRouter, NVIDIA NIM, Google Gemini AI Studio, GitHub Models, Mistral AI, Cohere, Together AI, and SambaNova) with OpenAI-compatible dynamic endpoint routing, utilizing the comprehensive **[freeLLM.net](https://freellm.net/)** directory as our single point of reference for discovering and configuring all free LLM models.
+  - Parsed and extracted LLM integration details from scanned PDF files ("Free Access To Every Major AI - full list.pdf" and "Nvidia FREE API - AI Models Guide.pdf") using a custom Python PyMuPDF and OpenRouter-hosted visual OCR sub-pipeline, cross-referencing with the live specifications on `freeLLM.net`.
   - Built a premium, glassmorphic visual dashboard interface including an **LLM Model Control** sidebar widget to select and strictly lock custom LLM providers and models directly from the browser frontend.
   - Wrote 11 automated integration tests in `pytest` covering storage, namespace isolation, BM25/Vector semantic conflict scans, idempotence rollups, TTL security sweeps, FastAPI REST endpoints, and custom provider request routing.
   - Coded background cognitive rollup scheduler (Day, Month, Year rollups) and unverified data sweeps.

@@ -23,7 +23,7 @@ This file indexes all modules and architectural layers successfully built and ve
 ---
 
 ## 🤖 3. LLM Fallback Client (`llm.py`)
-- Multi-provider async HTTP caller targeting OpenRouter, NVIDIA NIM, Google Gemini (AI Studio), GitHub Models, Mistral AI, Cohere, Together AI, and SambaNova.
+- Multi-provider async HTTP caller targeting OpenRouter, NVIDIA NIM, Google Gemini (AI Studio), GitHub Models, Mistral AI, Cohere, Together AI, and SambaNova. Mapped using configurations from **[freeLLM.net](https://freellm.net/)** (the best single-point index for finding all free LLMs).
 - Robust provider iteration pipeline to automatically fall back across models on status errors or 429 rate limit exceptions, automatically appending active API keys.
 - Dynamic request-level routing supporting optional `llm_provider` and `llm_model` parameters to bypass the default fallback chain.
 - Defensive parser to standardize unstructured model outputs to strict conflict options (`supersede`, `retain`, `annotate`).

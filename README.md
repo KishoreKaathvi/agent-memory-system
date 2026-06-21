@@ -40,6 +40,9 @@ The system consists of the following core modules:
 ### 1. Requirements
 Ensure Python 3.10+ is installed. We recommend the `uv` tool for package execution.
 
+> [!TIP]
+> The absolute best, single-point reference directory to discover all free LLMs, get free API keys (no credit card), compare rate limits, and lookup OpenAI-compatible endpoints is **[freeLLM.net](https://freellm.net/)** (associated repository: [awesome-freellm-apis](https://github.com/open-free-llm-api/awesome-freellm-apis)). Use it to secure keys for any of the providers listed below.
+
 ### 2. Configure Environment
 Create a `.env` file at the root:
 ```ini

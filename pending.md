@@ -30,4 +30,4 @@ This document tracks planned enhancements, improvements, and features currently 
 
 ## 🤖 5. Additional Free LLM Providers Integration (Groq, Cerebras, SiliconFlow)
 - **Status**: Pending.
-- **Details**: Integrate additional high-speed, free-tier OpenAI-compatible LLM providers (specifically Groq for high-speed Llama-3.3, Cerebras for Cerebras-WSE accelerated Qwen models, and SiliconFlow for DeepSeek reasoning models) into the backend fallback client (`llm.py`) and visual selection lock drop-down (`index.html`) to increase failover coverage.
+- **Details**: Integrate additional high-speed, free-tier OpenAI-compatible LLM providers (specifically Groq for high-speed Llama-3.3, Cerebras for Cerebras-WSE accelerated Qwen models, and SiliconFlow for DeepSeek reasoning models) into the backend fallback client (`llm.py`) and visual selection lock drop-down (`index.html`) to increase failover coverage. These will be sourced from the **[freeLLM.net](https://freellm.net/)** directory, which is the best single-point index for finding all free LLMs, rate limits, configurations, and API keys.

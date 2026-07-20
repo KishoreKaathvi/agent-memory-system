@@ -6,95 +6,106 @@ Self-hosted memory layer for AI agents: append-only SQLite storage, hybrid retri
 
 **MVP / Work in Progress**
 
-Core storage, retrieval, conflict handling, REST/MCP APIs, and tests are present in code. Session docs claim full completion and production readiness; that overstates operational maturity (missing dashboard job endpoints, full multi-key Docker wiring, continuous backup, and the monitoring plan from the build spec). Treat as a usable local/MVP stack, not production-hardened.
+Core storage, retrieval, conflict handling, REST/MCP APIs, Docker packaging, and an 11-case pytest suite are present in code (`app.py`, `database.py`, `retrieval.py`, `conflict.py`, `llm.py`, `mcp_server.py`, `tests/test_memory_system.py`). Session docs claim full completion and production readiness (`session.md`); that overstates operational maturity (dashboard job endpoints missing, Docker multi-key wiring incomplete, continuous backup and monitoring from the build plan not implemented). Treat as a usable local/MVP stack, not production-hardened.
 
-**Version:** `0.1.0` in `pyproject.toml` (app metadata also labels API `2.0.0`).
+**Versions:** package `0.1.0` in `pyproject.toml`; FastAPI app metadata may label API `2.0.0` separately in `app.py`.
 
-## Tech stack
+**Remote:** `https://github.com/KishoreKaathvi/agent-memory-system.git`
 
-| Layer | Choice |
-|--------|--------|
-| Language | Python ≥ 3.10 |
-| Package/runtime | `uv` + `pyproject.toml` / `uv.lock` |
-| API | FastAPI, Uvicorn, Pydantic v2 |
-| Storage | SQLite (WAL, `busy_timeout=5000`, `BEGIN IMMEDIATE` writes) |
-| Embeddings / rerank | `sentence-transformers` (`all-MiniLM-L6-v2`), CrossEncoder `BAAI/bge-reranker-v2-m3` |
-| LLM client | `httpx` multi-provider OpenAI-compatible chain |
-| MCP | FastMCP (`mcp` package) |
-| Ops | Docker / docker-compose, `run_jobs.py` CLI |
-| Tests | pytest, pytest-asyncio |
+## Tech Stack
 
-## Implemented features
+Pulled from manifests and imports (not assumed):
 
-Features with working code (not only documentation):
+| Layer | Choice | Source |
+|---|---|---|
+| Language | Python >= 3.10 | `pyproject.toml` |
+| Package / lock | `uv` + `pyproject.toml` / `uv.lock` | repo root |
+| API | FastAPI, Uvicorn, Pydantic v2 | `pyproject.toml`, `app.py` |
+| Storage | SQLite (WAL, busy timeout, `BEGIN IMMEDIATE`) | `database.py` |
+| Embeddings / rerank | `sentence-transformers` (`all-MiniLM-L6-v2`), CrossEncoder `BAAI/bge-reranker-v2-m3` | `retrieval.py`, `implemented.md` |
+| LLM HTTP client | `httpx` multi-provider OpenAI-compatible chain | `llm.py` |
+| MCP | FastMCP via `mcp` package | `mcp_server.py`, `pyproject.toml` |
+| Frontend | Single-page `index.html` dashboard | `index.html`, served by `GET /` |
+| Ops | Docker multi-stage build, `docker-compose.yml`, `run_jobs.py` | Dockerfile, compose, CLI |
+| Tests | pytest, pytest-asyncio | `pyproject.toml` dev group, `tests/` |
 
-- **SQLite schema & multi-tenant namespaces** (`database.py`) — `agent_namespaces` (API key SHA-256), append-only `memory_events`, day/month/year rollup tables, TOC, `memory_conflicts`
-- **Hybrid retrieval** (`retrieval.py`) — local embeddings, pure-Python BM25, Reciprocal Rank Fusion, BGE cross-encoder rerank, semantic chunk helper, confidence scoring
-- **Conflict detection & resolution** (`conflict.py`) — cosine similarity threshold `0.85` on fact/decision/preference/commitment; LLM chooses `supersede` / `retain` / `annotate`
-- **Multi-provider LLM client** (`llm.py`) — OpenRouter default chain; optional NVIDIA NIM, Gemini, GitHub Models, Mistral, Cohere, Together, SambaNova when env keys are set; request-level `llm_provider` / `llm_model` lock
-- **Temporal cognitive rollups** (`cognitive.py`) — idempotent day / month / year summaries with token-budget chunking
-- **Security helpers** (`security.py`) — namespace access checks, injection pattern scan for `external_document` sources, `<retrieved_context>` answer wrapping, TTL flagging of low-confidence memories
-- **REST API** (`app.py`) — `POST /remember`, `POST /recall`, `POST /answer`, `GET /health`, `GET /` (serves dashboard)
-- **MCP tools** (`mcp_server.py`) — `remember`, `recall` over stdio
-- **Browser dashboard** (`index.html`) — store / search / ask UI, auth token field, LLM provider/model lock in `localStorage`
-- **Ops CLI** (`run_jobs.py`) — safe SQLite backup, rollups, TTL sweep, metrics printout
-- **Docker packaging** — multi-step `Dockerfile` (model pre-cache), `docker-compose.yml` with volume for DB
-- **Test suite** (`tests/test_memory_system.py`) — 11 cases covering append-only, isolation, conflicts, rollups, security prompts, API routes, provider selection (LLM calls mocked where needed)
+## Implemented Features (✅)
 
-## In-progress / partial features
+| Feature | Evidence |
+|---|---|
+| SQLite schema, WAL, multi-tenant namespaces (API key SHA-256) | `database.py` |
+| Append-only memory events, rollups, TOC, conflict tables | `database.py`, `implemented.md` |
+| Hybrid retrieval: embeddings + pure-Python BM25 + RRF + BGE rerank | `retrieval.py` |
+| Semantic chunk helper + confidence scoring | `retrieval.py` |
+| Conflict detection (cosine ~0.85) + LLM resolve supersede/retain/annotate | `conflict.py` |
+| Multi-provider LLM client with fallback chain | `llm.py` (OpenRouter default; optional NVIDIA, Gemini, GitHub, Mistral, Cohere, Together, SambaNova when env keys set) |
+| Request-level `llm_provider` / `llm_model` lock | `llm.py`, `app.py` `/answer` |
+| Day / month / year cognitive rollups with token budget chunking | `cognitive.py` |
+| Namespace checks, injection scan, `<retrieved_context>` wrap, TTL sweep helpers | `security.py` |
+| REST: `POST /remember`, `POST /recall`, `POST /answer`, `GET /health`, `GET /` | `app.py` |
+| MCP tools `remember` + `recall` over stdio | `mcp_server.py` |
+| Browser dashboard: store / search / ask + LLM lock in `localStorage` | `index.html` |
+| Ops CLI: backup, rollups, TTL sweep, metrics | `run_jobs.py` |
+| Docker image + compose with DB volume | `Dockerfile`, `docker-compose.yml` |
+| Automated tests (11 cases) | `tests/test_memory_system.py` |
 
-- **Dashboard Operations (Backup / TTL Sweep)** — UI buttons call `POST /api/backup` and `POST /api/sweep`, but those routes **do not exist** in `app.py`. On failure the UI prints simulated success messages. Real backup/sweep only work via `run_jobs.py`.
-- **Docker multi-provider secrets** — `docker-compose.yml` only passes `OPENROUTER_API_KEY`, `MEMORY_SYSTEM_API_KEY`, and `OPENROUTER_MODEL`. Other providers documented in `user-guide.md` / `llm.py` are not wired into compose.
-- **No `.env.example`** — setup docs describe env vars; no sample env file is in the repo.
-- **Production monitoring (build plan Part 13)** — structured event logging / alerts for rollup health, provider exhaustion, retrieval drift, WAL growth are specified in `agent-memory-system-build-plan.md` but not implemented beyond basic Python logging and CLI `--metrics`.
-- **MCP surface** — plan and code expose `remember` + `recall` only; no MCP `answer` tool (REST has `/answer`).
-- **Scheduled ops** — handoff recommends cron for rollups/backups; no in-repo scheduler or compose sidecar.
+## In-Progress / Partial Features ()
 
-## Planned but not started
+| Feature | What exists | What is missing |
+|---|---|---|
+| Dashboard Operations (Backup / TTL Sweep) | UI calls `POST /api/backup` and `POST /api/sweep` (`index.html`) | Those routes do **not** exist in `app.py` (only `/remember`, `/recall`, `/answer`, `/health`, `/`). On failure the UI can still print simulated success. Real ops: `run_jobs.py` |
+| Docker multi-provider secrets | Compose passes `OPENROUTER_API_KEY`, `MEMORY_SYSTEM_API_KEY`, `OPENROUTER_MODEL` | Other providers documented in `user-guide.md` / `llm.py` are not wired into `docker-compose.yml` |
+| Env sample file | Docs describe env vars | No `.env.example` in repo |
+| Production monitoring (build plan Part 13) | Basic Python logging + `run_jobs.py --metrics` | Structured alerts for rollup health, provider exhaustion, retrieval drift, WAL growth not implemented |
+| MCP surface | `remember`, `recall` | No MCP `answer` tool (REST has `/answer`) |
+| Scheduled ops | Handoff recommends cron | No in-repo scheduler or compose sidecar |
+| freeLLM.net | Referenced heavily in docs as discovery index | Not a live registry in code; providers hard-coded in `llm.py` |
 
-From `pending.md` and the build plan:
+## Planned but Not Started (❌)
+
+From `pending.md` and `agent-memory-system-build-plan.md` where matching production code was not found:
 
 | Item | Source |
-|------|--------|
-| Graph-augmented retrieval (entity relations) | `pending.md` — deferred |
-| Litestream continuous SQLite → S3 replication | `pending.md` / build plan Part 7.5 |
+|---|---|
+| Graph-augmented retrieval (entity relations) | `pending.md` - deferred |
+| Litestream continuous SQLite -> S3 replication | `pending.md` / build plan |
 | OAuth 2.1 PKCE for browser clients | `pending.md` |
-| PostgreSQL migration for horizontal scale | `pending.md` — deferred |
+| PostgreSQL migration for horizontal scale | `pending.md` - deferred |
 | Extra free LLM providers (Groq, Cerebras, SiliconFlow) | `pending.md` |
-| Full observability stack (alerts on rollup miss, golden-set regression schedule, etc.) | build plan Part 13 |
+| Full observability stack (alerts, golden-set regression schedule) | build plan Part 13 |
 
-## Architecture overview
+## Architecture Overview
 
-Summarized from `decisions.md` and `agent-memory-system-build-plan.md` (not a full copy of either):
+Summarized from `decisions.md` and `agent-memory-system-build-plan.md` (not copied verbatim):
 
 ```
 Clients (browser dashboard, REST agents, MCP tools)
-        │
-        ▼
-   FastAPI app  ──  MCP server (stdio)
-        │
-        ├── conflict check + remember
-        ├── hybrid recall + rerank
-        └── LLM answer synthesis
-        │
-        ▼
-   SQLite (WAL)  ·  namespaces · events · rollups · conflicts
-        │
+        |
+        v
+   FastAPI app  --  MCP server (stdio)
+        |
+        +-- conflict check + remember
+        +-- hybrid recall + rerank
+        +-- LLM answer synthesis
+        |
+        v
+   SQLite (WAL)  -  namespaces, events, rollups, conflicts
+        |
    Local CPU models (embed + rerank) + external free-tier LLMs
 ```
 
 Design choices documented in-repo:
 
-1. **SQLite + WAL** for zero hosted DB cost; migrate only if concurrency forces it.
-2. **Hybrid Vector + BM25 + RRF + local rerank** for retrieval quality without paid vector DBs.
-3. **Free multi-provider LLM fallback** (indexed via freeLLM.net notes in docs) for conflict/rollup/answer paths.
-4. **Similarity-gated conflict LLM** to limit cost and default ambiguous cases to `annotate`.
-5. **Delimiter-wrapped retrieved context** against stored prompt injection.
-6. **Server-side API keys only**; clients may lock provider/model, not credentials.
+1. **SQLite + WAL** for zero hosted DB cost; migrate only if concurrency forces it (`decisions.md`).
+2. **Hybrid Vector + BM25 + RRF + local rerank** without paid vector DBs (`decisions.md`).
+3. **Free multi-provider LLM fallback** for conflict/rollup/answer paths (`llm.py`, `decisions.md`).
+4. **Similarity-gated conflict LLM**; ambiguous cases default toward `annotate` (`conflict.py`, `decisions.md`).
+5. **Delimiter-wrapped retrieved context** against stored prompt injection (`security.py`).
+6. **Server-side API keys only**; clients may lock provider/model, not credentials (`decisions.md`, `index.html`).
 
-Two memory classes: **library** (stable knowledge) vs **episodic** (decisions, events, preferences). Cognitive stack: raw segments → day → month → year rollups with TOC.
+Two memory classes: **library** (stable knowledge) vs **episodic** (decisions, events, preferences). Cognitive stack: raw segments -> day -> month -> year rollups with TOC.
 
-## Setup / installation
+## Setup / Installation
 
 **Prerequisites:** Python 3.10+, [uv](https://github.com/astral-sh/uv).
 
@@ -110,7 +121,7 @@ uv sync
 #           COHERE_API_KEY, TOGETHER_API_KEY, SAMBANOVA_API_KEY, DATABASE_PATH
 ```
 
-Optional keys and model names are described in `user-guide.md`.
+Optional keys and model names are described in `user-guide.md`. Dependencies come only from `pyproject.toml` / `uv.lock`.
 
 ## Usage
 
@@ -120,13 +131,12 @@ Optional keys and model names are described in `user-guide.md`.
 uv run uvicorn app:app --port 8000 --reload
 ```
 
-- Dashboard: http://localhost:8000  
-- Default local API key (if unset): see default in `app.py` / examples in `user-guide.md`  
+- Dashboard: http://localhost:8000
 - Auth: `Authorization: Bearer <MEMORY_SYSTEM_API_KEY>`
 
-### REST (examples)
+### REST
 
-See `user-guide.md` for full curl examples of:
+See `user-guide.md` for curl examples of:
 
 - `POST /remember`
 - `POST /recall`
@@ -162,27 +172,28 @@ docker compose up -d --build
 uv run pytest
 ```
 
-## Project docs (source of truth for intent)
+## Notes / Discrepancies
+
+| Claim in docs | Reality in code | Prefer |
+|---|---|---|
+| "Completed & Test-Verified" / production ready (`session.md`) | Core features + tests exist; ops gaps remain (see Partial) | Code over optimistic session notes |
+| Dashboard "Safe Backup DB" / "Sweep Expired TTL" (`user-guide.md`) | UI only; no matching FastAPI routes; false success paths possible | `run_jobs.py` for real backup/sweep |
+| Eight providers in Docker | Compose exposes OpenRouter + system key only | `docker-compose.yml` |
+| Monitoring & continuous backup (Litestream) | Planned in `pending.md` / build plan | Not implemented |
+| freeLLM.net as live registry | Documentation reference only | Hard-coded providers in `llm.py` |
+| Factual golden corpus Recall@3 >= 80% | Evaluation logic exists in tests | Not a scheduled production metric job |
+| Path references in older docs | Some docs still point at a previous Windows path under "Judgement Frontend Project" (`handoff.md`, `user-guide.md`) | This repo root is `agent-memory-system` |
+| `implemented.md` vs partial dashboard ops | Lists dashboard as full visual controller | Dashboard exists; ops buttons incomplete |
+
+**Project intent docs:**
 
 | File | Role |
-|------|------|
+|---|---|
 | `agent-memory-system-build-plan.md` | Full intended design (v2.0) |
 | `implemented.md` | Author checklist of built modules |
 | `pending.md` | Deferred roadmap |
 | `decisions.md` | ADR-style design choices |
-| `handoff.md` / `session.md` | Session state (optimistic on “done”) |
+| `handoff.md` / `session.md` | Session state (optimistic on "done") |
 | `user-guide.md` | Setup and API usage |
-
-## Notes: docs vs code
-
-| Claim in docs | Reality in code |
-|---------------|-----------------|
-| “Completed & Test-Verified” / production containers | Core features + tests exist; ops gaps remain (see Partial above). |
-| Dashboard “Safe Backup DB” / “Sweep Expired TTL” | UI only; no matching FastAPI routes; false success on error paths. |
-| Eight providers in Docker | Compose exposes OpenRouter + system key only. |
-| Monitoring & continuous backup (Litestream) | Planned; not implemented. |
-| freeLLM.net as live registry | Used as documentation reference only; providers are hard-coded in `llm.py`. |
-| Factual golden corpus Recall@3 ≥ 80% | Evaluation logic exists in tests; not a scheduled production metric job. |
-| Path references in older docs | Some docs still point at a previous Windows path under “Judgement Frontend Project”; this repo is `agent-memory-system`. |
 
 **Rule of thumb:** trust the Python modules for what works; trust `agent-memory-system-build-plan.md` + `pending.md` for what was intended next.
